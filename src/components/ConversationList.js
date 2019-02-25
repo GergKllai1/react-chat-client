@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Component} from 'react';
 import { ActionCable } from 'react-actioncable-provider';
 import { API_ROOT } from '../constants';
 import NewConversationForm from './NewConversationForm';
@@ -32,7 +32,7 @@ export default class ConversationList extends Component {
   }
 
   render = () => {
-    const { conversation, activeConversation } = this.state;
+    const { conversations, activeConversation } = this.state;
     return (
       <div className="conversationList">
         <ActionCable 
