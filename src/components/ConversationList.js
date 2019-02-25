@@ -1,11 +1,11 @@
-import React, {Component} from 'react';
+import React from 'react';
 import { ActionCable } from 'react-actioncable-provider';
 import { API_ROOT } from '../constants';
 import NewConversationForm from './NewConversationForm';
 import MessagesArea from './MessagesArea';
 import Cable from './Cable';
 
-export default class ConversationList extends Component {
+class ConversationsList extends React.Component {
   state = {
     conversations: [],
     activeConversation: null
@@ -13,13 +13,20 @@ export default class ConversationList extends Component {
 
   componentDidMount = () => {
     fetch(`${API_ROOT}/conversations`)
-    .then(res => res.json())
-    .then(conversations => this.setState({conversations}));
+      .then(res => res.json())
+      .then(conversations => this.setState({ conversations }));
   };
 
   handleClick = id => {
-    this.setState({activeConversation: id});
-  }
+    this.setState({ activeConversation: id });
+  };
+
+  handleReceivedConversation = response => {
+    const { conversation } = response;
+    this.setState({
+      conversations: [...this.state.conversations, conversation]
+    });
+  };
 
   handleReceivedMessage = response => {
     const { message } = response;
@@ -28,38 +35,42 @@ export default class ConversationList extends Component {
       conversation => conversation.id === message.conversation_id
     );
     conversation.messages = [...conversation.messages, message];
-    this.setState({ conversations })
-  }
+    this.setState({ conversations });
+  };
 
   render = () => {
     const { conversations, activeConversation } = this.state;
     return (
-      <div className="conversationList">
-        <ActionCable 
-          channel={{ channel: 'ConversationChannel' }}
-          onRecieved={this.handleReceivedMessage}
+      <div className="conversationsList">
+        <ActionCable
+          channel={{ channel: 'ConversationsChannel' }}
+          onReceived={this.handleReceivedConversation}
         />
         {this.state.conversations.length ? (
-          <Cable 
+          <Cable
             conversations={conversations}
             handleReceivedMessage={this.handleReceivedMessage}
           />
-        ) : null }
+        ) : null}
         <h2>Conversations</h2>
         <ul>{mapConversations(conversations, this.handleClick)}</ul>
         <NewConversationForm />
         {activeConversation ? (
-          <MessagesArea 
+          <MessagesArea
             conversation={findActiveConversation(
-              conversations, 
+              conversations,
               activeConversation
             )}
           />
-        ) : null }
+        ) : null}
       </div>
-    )
-  }
+    );
+  };
 }
+
+export default ConversationsList;
+
+// helpers
 
 const findActiveConversation = (conversations, activeConversation) => {
   return conversations.find(
